@@ -2,28 +2,91 @@
 
 # Plaid2QIF Account Linker
 
-In order to use Plaid2QIF you must grant Plaid2QIF authorization to access your financial institution's account on your behalf with via Plaid.  This is done by using this tool to log into your account and exchange credentials to obtain an "access token".
+In order to use Plaid2QIF, you must grant Plaid2QIF authorization to access your
+financial institution's account on your behalf via Plaid.  This is done by using
+this tool to log into your account and exchange credentials to obtain an "access
+token".
 
-You should follow these steps for gaining access to each financial institution's accounts that you'd like to use with Plaid2QIF.  Each access token should be stored in a separate file for each institution. (This could be improved -- see #27).
+You should follow these steps for gaining access to each financial institution's
+accounts that you'd like to use with Plaid2QIF.  Each access token should be
+stored in a separate file for each institution. (This could be improved -- 
+see #27).
+
+## Install
+
+Besides a working python3 install and the contents of this folder, you need to
+have flask and plaid-python installed for the following to work.
+
+```
+pip3 install flask
+pip3 install plaid-python
+```
+
+Some testing has been done up to plaid-python version 15.2.0. There can be
+warnings about pip dependencies with plaid2qif, which so far are not impactful.
 
 ## Usage
 
 **To Begin**
-* Decide on a location where you want this service to write out the access token.
-* Configure your environment for authentication as documented in the [parent README](../README.md#authentication-configuration)
 
-```
-cd ./gen-access-token
-cp sample.env /path/to/your/working/directory/.env
+* Tell Plaid it's ok for traffic to be redirected to the web server you'll be
+  launching locally to manage the oauth and access token process. On their 
+  [dashboard API page](https://dashboard.plaid.com/developers/api), go to 
+  "Allowed Redirected URIs" and add the address of the server you'll start (by
+  default, `https://localhost:8080/oauth`).
 
-# Configure as described in the [parent README](../README.md#authentication-configuration)
-vi .env
+* Configure your environment for authentication as documented in the 
+  [parent README](../README.md#authentication-configuration). You can start from
+  the provided sample in `./gen-access-token/sample.env`. The file 
+  `./gen-access-token/.env` will be read by the server, and so using that is a
+  convenient way to store your environment configuration. The following commands
+  may help you get your configuration setup.
 
-python server.py
-open http://127.0.0.1:8080
-```
+  ```
+  cd ./gen-access-token
+  cp sample.env /path/to/your/working/directory/.env
+  # use your choice of editor on .env--Nano, pico, vi, etc.
+  vi .env
+  ```
 
-The access token is written to a file as plain text -- one line with nothing but the access token -- to the location configured in your `.env` file.
+  In particular, when setting up your environment:
+
+  - Decide on a location where you want this service to write out the access
+    token, and configure that in the `ACCESS_TOKEN_FILE` environment variable.
+
+  - Make sure that `PLAID_SANDBOX_REDIRECT_URI` and `PORT_NUMBER` match what
+    was configured in the Plaid Redirect URI list above
+    (`https://localhost:8080/oauth` and `8080` respectively by default.)
+
+* Start the server. At the command line, type:
+
+  ```
+  python server.py
+  ```
+
+  You can hit CTLR+C to exit this server if you encounter an error or are
+  successful in authenticating your account.
+
+* Visit the server's page. You can click on the link that server.py prints out
+  in your terminal, or at another command line, enter:
+
+  ```
+  open http://127.0.0.1:8080
+  ```
+
+  On this page, you should see the [screen shot](#screenshot) below. Click the
+  "Launch the Plaid Authentication process" button to begin authenticating
+  access to your account. Plaid will walk you through the process of selecting
+  your bank, getting your credentials, and generating the access token. Check
+  the command line for any errors from server.py if results don't seem as
+  expected. Also, check the `ACCESS_TOKEN_FILE` location you configured to
+  confirm the process worked.
+
+When completed, the access token is written to a file as plain text -- one line
+with nothing but the access token -- to the location configured in your `.env`
+file. This is a sensitive file that allows access to your account, so manage it
+carefully. You can hit `CTRL-C` at the command line to exit server.py, and run
+the process again for other accounts.
 
 ## Screenshot
 
@@ -31,10 +94,18 @@ The access token is written to a file as plain text -- one line with nothing but
 
 ## Footnotes
 
-* Visit https://dashboard.plaid.com/team/api and configure a redirect URL that corresponds to the value of `PLAID_SANDBOX_REDIRECT_URI`.  This only gets used if your financial institution relies on OAuth.  I've not tested this scenario, so if it doesn't work I'd appreciate your notes (or a PR) to fix it.
+Visit https://dashboard.plaid.com/team/api and configure a redirect URL that
+corresponds  to the value of `PLAID_SANDBOX_REDIRECT_URI`.  This only gets
+used if your financial institution relies on OAuth.  I've not tested this
+scenario (though others have), so if it doesn't work I'd appreciate your notes
+(or a PR) to fix it.
 
 ## Disclaimer
 
-The access token generated by using this tool is sensitive material as it grants access to your accounts. It should be handled with care and protected from unauthorized access.
+The access token generated by using this tool is sensitive material as it grants
+access to your accounts. It should be handled with care and protected from
+unauthorized access.
 
-You must be sure to store it in such a way that makes it impossible for others to gain access.  The creators and maintainers of Plaid2QIF are in no way responsible if you mishandle your access token.
+You must be sure to store it in such a way that makes it impossible for others
+to gain access.  The creators and maintainers of Plaid2QIF are in no way
+responsible if you mishandle your access token.

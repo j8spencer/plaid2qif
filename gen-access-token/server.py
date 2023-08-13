@@ -17,14 +17,24 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-PORT=environ['PORT_NUMBER']
+try:
+    PORT=environ['PORT_NUMBER']
+except KeyError:
+    PORT = None
+if not PORT:
+    # Default port
+    PORT=8080
 
 def env_lookup():
-    env = environ['PLAID_ENV']
+    try:
+        env = environ['PLAID_ENV']
+    except KeyError:
+        # Default is development.
+        env = ''
+    if env == 'development' or not env:
+        return plaid.Environment.Development
     if env == 'sandbox':
         return plaid.Environment.Sandbox
-    if env == 'development':
-        return plaid.Environment.Development
     if env == 'production':
         return plaid.Environment.Production
     raise Exception('Expected one of [sandbox|development|production] as an environment.')
